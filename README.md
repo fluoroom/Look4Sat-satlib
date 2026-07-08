@@ -38,7 +38,7 @@ It is now and always will be completely ad-free and open-source.
 
 This fork adds **satlib** — a universal local-network API that exposes complete, real-time satellite pass data so any external application can consume it over HTTP, without device-specific integrations inside the tracker.
 
-### satlib
+### [satlib](https://github.com/fluoroom/satlib)
 
 While a pass is active on the radar screen, any device on the same network can poll:
 
