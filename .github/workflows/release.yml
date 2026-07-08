@@ -27,8 +27,8 @@ jobs:
       - name: Setup Gradle
         uses: gradle/actions/setup-gradle@v6
 
-      - name: Assemble Artifacts
-        run: ./gradlew assembleRelease bundleRelease
+      - name: Assemble APK
+        run: ./gradlew assembleRelease
 
       - name: Sign APK
         run: |
@@ -43,37 +43,6 @@ jobs:
             --out app/build/outputs/apk/release/look4sat.apk \
             "$APK"
           rm keystore.jks
-
-      - name: Sign Bundle
-        run: |
-          echo "${{ secrets.KEY_STORE }}" | base64 -d > keystore.jks
-          AAB=$(find app/build/outputs/bundle/release -name "*.aab" | head -1)
-          jarsigner -verbose -sigalg SHA256withRSA -digestalg SHA-256 \
-            -keystore keystore.jks \
-            -storepass ${{ secrets.KEY_STORE_PASSWORD }} \
-            -keypass ${{ secrets.KEY_PASSWORD }} \
-            "$AAB" ${{ secrets.KEY_ALIAS }}
-          rm keystore.jks
-
-      - name: Setup Ruby
-        uses: ruby/setup-ruby@v1
-        with:
-          ruby-version: '3.4'
-
-      - name: Deploy Bundle to Google Play
-        run: |
-          gem install multi_json
-          gem install fastlane --no-document
-          AAB=$(find app/build/outputs/bundle/release -name "*.aab" | head -1)
-          echo '${{ secrets.SERVICE_ACCOUNT_JSON }}' > service_account.json
-          fastlane supply \
-            --aab "$AAB" \
-            --json_key service_account.json \
-            --package_name com.rtbishop.look4sat \
-            --track production \
-            --skip_upload_images true \
-            --skip_upload_screenshots true \
-          rm service_account.json
 
       - name: Create Release
         run: |
