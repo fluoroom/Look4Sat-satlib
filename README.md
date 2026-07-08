@@ -34,6 +34,41 @@ It is now and always will be completely ad-free and open-source.
 *  Custom TLE satellite data import is available via Three Line Element .txt files
 *  Offline first: calculations are made offline. Weekly TLE data update is recommended.
 
+## This fork
+
+This fork adds **satlib** — a universal local-network API that exposes complete, real-time satellite pass data so any external application can consume it over HTTP, without device-specific integrations inside the tracker.
+
+### satlib
+
+While a pass is active on the radar screen, any device on the same network can poll:
+
+```
+GET http://<phone-ip>:4534/
+```
+
+and receive a live JSON snapshot updated every second:
+
+```json
+{
+  "satName": "ISS (ZARYA)",
+  "azimuthDeg": 247.35,
+  "elevationDeg": 12.84,
+  "altitudeKm": 421.10,
+  "txFrequencyHz": 145827340,
+  "rxFrequencyHz": 145826100,
+  "ctcssTxToneHz": 67.0,
+  "ctcsRxToneHz": null,
+  "mode": "FM",
+  "aosTime": 1752012345000,
+  "losTime": 1752012945000,
+  ...
+}
+```
+
+Full field reference, idle state semantics, and versioning rules are documented in [SATLIB.md](SATLIB.md).
+
+---
+
 ## Star History
 
 <a href="https://www.star-history.com/?repos=rt-bishop%2FLook4Sat&type=timeline&legend=top-left">
