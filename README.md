@@ -2,7 +2,7 @@
 
 [![Look4Sat CI](https://github.com/rt-bishop/Look4Sat/actions/workflows/release.yml/badge.svg)](https://github.com/rt-bishop/Look4Sat/actions/workflows/release.yml)
 
-### !!! This fork must be downloaded from [releases page](https://github.com/fluoroom/Look4Sat-satlib/releases), NOT app stores, until (maybe) main Loo4Sat project adopts these changes.
+### !!! This fork must be downloaded from [releases page](https://github.com/fluoroom/Look4Sat-satlib/releases), NOT app stores, until (maybe) the main Look4Sat project adopts these changes.
 
 [<img src="https://play.google.com/intl/en_gb/badges/static/images/badges/en_badge_web_generic.png" alt="Get it on Google Play" height="80">](https://play.google.com/store/apps/details?id=com.rtbishop.look4sat)
 [<img src="https://fdroid.gitlab.io/artwork/badge/get-it-on.png" alt="Get it on F-Droid" height="80">](https://f-droid.org/packages/com.rtbishop.look4sat/)
