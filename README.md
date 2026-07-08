@@ -4,8 +4,7 @@
 
 ### !!! This fork must be downloaded from [releases page](https://github.com/fluoroom/Look4Sat-satlib/releases), NOT app stores, until (maybe) the main Look4Sat project adopts these changes.
 
-<img src="https://play.google.com/intl/en_gb/badges/static/images/badges/en_badge_web_generic.png" alt="Get it on Google Play" height="80">
-<img src="https://fdroid.gitlab.io/artwork/badge/get-it-on.png" alt="Get it on F-Droid" height="80">
+<img src="https://play.google.com/intl/en_gb/badges/static/images/badges/en_badge_web_generic.png" alt="Get it on Google Play" height="80"> <img src="https://fdroid.gitlab.io/artwork/badge/get-it-on.png" alt="Get it on F-Droid" height="80">
 
 ### Radio satellite tracker and pass predictor for Android, inspired by Gpredict
 
