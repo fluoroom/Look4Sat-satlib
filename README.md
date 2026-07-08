@@ -1,6 +1,8 @@
 # Look4Sat: Satellite tracker
 
-[![Look4Sat CI](https://github.com/rt-bishop/Look4Sat/actions/workflows/release.yml/badge.svg)](https://github.com/rt-bishop/Look4Sat/actions/workflows/release.yml)
+[![Look4Sat CI](https://github.com/fluoroom/Look4Sat-satlib/actions/workflows/release.yml/badge.svg)](https://github.com/fluoroom/Look4Sat-satlib/actions/workflows/release.yml)
+
+### [SatLib](https://github.com/fluoroom/satlib) fork, for using with [N76-satlib-android](https://github.com/fluoroom/n76bt-satlib-android) and others.
 
 ### !!! This fork must be downloaded from [releases page](https://github.com/fluoroom/Look4Sat-satlib/releases), NOT app stores, until (maybe) the main Look4Sat project adopts these changes.
 
