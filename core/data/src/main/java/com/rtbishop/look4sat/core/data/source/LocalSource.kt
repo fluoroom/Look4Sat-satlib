@@ -48,7 +48,19 @@ class LocalSource(private val look4SatDao: Look4SatDao) : ILocalSource {
 
     override suspend fun deleteEntries() = look4SatDao.deleteEntries()
 
-    override suspend fun getIdsWithModes(modes: List<String>) = look4SatDao.getIdsWithModes(modes)
+    override suspend fun getIdsWithModes(modes: List<String>): List<Int> {
+        val regularModes = modes.filter { it != "APRS" }
+        val regular = if (regularModes.isNotEmpty()) look4SatDao.getIdsWithModes(regularModes) else emptyList()
+        val aprs = if ("APRS" in modes) look4SatDao.getIdsWithAprs() else emptyList()
+        return (regular + aprs).distinct()
+    }
+
+    override suspend fun getAvailableModes(ids: List<Int>): List<String> {
+        if (ids.isEmpty()) return emptyList()
+        val modes = ids.chunked(999).flatMap { look4SatDao.getModesForIds(it) }.distinct().sorted()
+        val aprsIds = look4SatDao.getIdsWithAprs().toHashSet()
+        return if (ids.any { it in aprsIds }) (modes + "APRS").sorted() else modes
+    }
 
     override suspend fun getIdsWithBands(bands: List<String>): List<Int> {
         if (bands.isEmpty()) return emptyList()

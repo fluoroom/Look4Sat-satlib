@@ -154,7 +154,9 @@ class RadarViewModel(
         val modes = settings.selectedModes
         val bands = settings.selectedBands
         val allRadios = satelliteRepo.getRadiosWithId(pass.catNum).filter { radio ->
-            val modeOk = modes.isEmpty() || (radio.downlinkMode != null && radio.downlinkMode in modes)
+            val modeOk = modes.isEmpty() ||
+                (radio.downlinkMode != null && radio.downlinkMode in modes) ||
+                ("APRS" in modes && radio.info.contains("APRS", ignoreCase = true))
             val bandOk = bands.isEmpty() || transponderBandConfig(radio.downlinkLow, radio.uplinkLow)?.let { it in bands } == true
             modeOk && bandOk
         }

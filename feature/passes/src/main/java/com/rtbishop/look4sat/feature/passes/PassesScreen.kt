@@ -112,6 +112,7 @@ private fun PassesScreen(
         TransponderDialog(
             modes = uiState.modes,
             bands = uiState.bands,
+            availableModes = uiState.availableModes,
             cancel = { onAction(PassesAction.ToggleTransponderDialog) }
         ) { modes, bands ->
             onAction(PassesAction.FilterTransponders(modes, bands))

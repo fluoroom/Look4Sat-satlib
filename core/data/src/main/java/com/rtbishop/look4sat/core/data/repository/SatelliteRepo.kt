@@ -52,6 +52,9 @@ class SatelliteRepo(
     private val _satellites = MutableStateFlow<List<OrbitalObject>>(emptyList())
     override val satellites: StateFlow<List<OrbitalObject>> = _satellites
 
+    private val _availableModes = MutableStateFlow<List<String>>(emptyList())
+    override val availableModes: StateFlow<List<String>> = _availableModes
+
     private val _selectedPass = MutableStateFlow(0 to 0L)
     override val selectedPass: StateFlow<Pair<Int, Long>> = _selectedPass
 
@@ -66,6 +69,9 @@ class SatelliteRepo(
             _satellites.update { localStorage.getEntriesWithIds(selectedIds) }
             val settings = settingsRepo.passesSettings.value
             calculatePasses(System.currentTimeMillis(), settings.hoursAhead, settings.minElevation, settings.selectedModes, settings.selectedBands)
+            try {
+                _availableModes.update { localStorage.getAvailableModes(selectedIds) }
+            } catch (_: Exception) {}
         }
     }
 

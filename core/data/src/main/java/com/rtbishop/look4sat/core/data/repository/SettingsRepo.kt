@@ -140,7 +140,7 @@ class SettingsRepo(
         val hoursAhead = preferences.getInt(keyFilterHoursAhead, 24)
         val minElevation = Double.fromBits(preferences.getLong(keyFilterMinElevation, 16.0.toRawBits()))
         val selectedModesString = preferences.getString(keySelectedModes, null)
-        val selectedModes = selectedModesString?.split(separatorComma)?.sorted() ?: emptyList()
+        val selectedModes = selectedModesString?.split(separatorComma)?.filter { it.isNotBlank() }?.sorted() ?: emptyList()
         val selectedBandsString = preferences.getString(keySelectedBands, null)
         val selectedBands = selectedBandsString?.split(separatorComma)?.filter { it.isNotBlank() } ?: emptyList()
         return PassesSettings(showDeepSpace, hoursAhead, minElevation, selectedModes, selectedBands)

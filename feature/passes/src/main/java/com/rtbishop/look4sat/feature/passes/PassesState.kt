@@ -32,6 +32,7 @@ data class PassesState(
     val showDeepSpace: Boolean = true,
     val modes: List<String> = emptyList(),
     val bands: List<String> = emptyList(),
+    val availableModes: List<String> = emptyList(),
     val itemsList: List<OrbitalPass> = emptyList(),
     val groupedPasses: Map<String, List<OrbitalPass>> = emptyMap(),
     val shouldSeeWhatsNew: Boolean = false,

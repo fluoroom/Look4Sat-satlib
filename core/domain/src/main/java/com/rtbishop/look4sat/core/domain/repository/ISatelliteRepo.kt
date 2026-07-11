@@ -28,6 +28,9 @@ interface ISatelliteRepo {
     /** All selected OrbitalObjects, updated when the selection changes. */
     val satellites: StateFlow<List<OrbitalObject>>
 
+    /** Distinct modes (including "APRS") available across the current satellite selection. */
+    val availableModes: StateFlow<List<String>>
+
     /** Raw calculated passes (without live progress). Updated on selection/filter change. */
     val passes: StateFlow<List<OrbitalPass>>
 

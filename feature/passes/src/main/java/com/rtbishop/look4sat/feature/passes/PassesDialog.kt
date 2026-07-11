@@ -60,14 +60,6 @@ import com.rtbishop.look4sat.core.presentation.R
 import com.rtbishop.look4sat.core.presentation.SharedDialog
 import com.rtbishop.look4sat.core.presentation.elevationColor
 
-private val allModes = listOf(
-    "AFSK", "AFSK S-Net", "AFSK SALSAT", "AHRPT", "AM", "APT", "BPSK", "BPSK PMT-A3",
-    "CERTO", "CW", "DQPSK", "DSTAR", "DUV", "FFSK", "FM", "FMN", "FSK", "FSK AX.100 Mode 5",
-    "FSK AX.100 Mode 6", "FSK AX.25 G3RUH", "GFSK", "GFSK Rktr", "GMSK", "HRPT", "LoRa",
-    "LRPT", "LSB", "MFSK", "MSK", "MSK AX.100 Mode 5", "MSK AX.100 Mode 6", "OFDM", "OQPSK",
-    "PSK", "PSK31", "PSK63", "QPSK", "QPSK31", "QPSK63", "SSTV", "USB", "WSJT"
-)
-
 private val hourSteps = listOf(1, 2, 4, 8, 12, 24, 48, 72, 96, 120, 144, 168, 192, 216, 240)
 
 @Preview
@@ -161,13 +153,14 @@ private fun SliderRow(
 @Preview(showBackground = true)
 @Composable
 private fun TransponderDialogPreview() {
-    MainTheme { TransponderDialog(emptyList(), emptyList(), {}) { _, _ -> } }
+    MainTheme { TransponderDialog(emptyList(), emptyList(), emptyList(), {}) { _, _ -> } }
 }
 
 @Composable
 internal fun TransponderDialog(
     modes: List<String>,
     bands: List<String>,
+    availableModes: List<String>,
     cancel: () -> Unit,
     accept: (List<String>, List<String>) -> Unit
 ) {
@@ -191,7 +184,7 @@ internal fun TransponderDialog(
             horizontalArrangement = Arrangement.spacedBy(1.dp),
             verticalArrangement = Arrangement.spacedBy(1.dp)
         ) {
-            itemsIndexed(allModes) { index, item ->
+            itemsIndexed(availableModes) { index, item ->
                 FilterRow(
                     label = "${index + 1}).",
                     text = item,

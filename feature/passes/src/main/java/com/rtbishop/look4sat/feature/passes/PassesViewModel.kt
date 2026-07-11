@@ -69,6 +69,12 @@ class PassesViewModel(
                 _uiState.update { it.copy(isRefreshing = calculating) }
             }
         }
+        // Update available modes when the satellite selection changes
+        viewModelScope.launch {
+            satelliteRepo.availableModes.collectLatest { modes ->
+                _uiState.update { it.copy(availableModes = modes) }
+            }
+        }
         // React to settings changes: update UTC flag and whatsNew
         viewModelScope.launch {
             settingsRepo.otherSettings.collectLatest { settings ->
