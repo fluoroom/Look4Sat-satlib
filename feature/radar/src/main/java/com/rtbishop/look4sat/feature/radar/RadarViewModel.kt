@@ -254,6 +254,7 @@ class RadarViewModel(
                 val svc = trackingService.state.value
                 if (svc.isActive) {
                     trackingService.stopTracking()
+                    satlib.updateSatData(SatApiData())
                 } else {
                     val pass = _uiState.value.currentPass ?: return
                     val transponder = svc.selectedTransponder ?: return
