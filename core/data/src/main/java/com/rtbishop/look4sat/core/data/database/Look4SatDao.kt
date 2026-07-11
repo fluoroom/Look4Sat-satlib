@@ -48,6 +48,9 @@ interface Look4SatDao {
     @Query("SELECT catnum FROM radios WHERE downlinkMode IN (:modes)")
     suspend fun getIdsWithModes(modes: List<String>): List<Int>
 
+    @Query("SELECT catnum, downlinkLow, uplinkLow FROM radios WHERE isAlive = 1 AND catnum IS NOT NULL")
+    suspend fun getRadiosForBandFilter(): List<RadioBandInfo>
+
     @Query("SELECT COUNT(*) FROM radios")
     suspend fun getRadiosTotal(): Int
 

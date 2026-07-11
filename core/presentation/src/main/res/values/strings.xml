@@ -35,6 +35,7 @@
     <string name="pass_filter_deep_space">DeepSpace (period >225min)</string>
     <string name="pass_time_placeholder" translatable="false"> -- : -- : -- </string>
     <string name="pass_modes_title">Select modulation type</string>
+    <string name="pass_transponder_title">Filter transceivers</string>
     <string name="pass_satId" translatable="false">%05d</string>
     <string name="pass_elevation">Elevation: %.1f°</string>
     <string name="pass_deep_space" translatable="false">DeepSpace</string>

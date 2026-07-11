@@ -22,6 +22,7 @@ import com.rtbishop.look4sat.core.domain.model.SatRadio
 import com.rtbishop.look4sat.core.domain.predict.OrbitalData
 import com.rtbishop.look4sat.core.domain.predict.OrbitalObject
 import com.rtbishop.look4sat.core.domain.source.ILocalSource
+import com.rtbishop.look4sat.core.domain.utility.transponderBandConfig
 import com.rtbishop.look4sat.core.data.database.entity.SatEntry as FrameworkEntry
 import com.rtbishop.look4sat.core.data.database.entity.SatRadio as FrameworkRadio
 import com.rtbishop.look4sat.core.domain.model.SatRadio as DomainRadio
@@ -48,6 +49,18 @@ class LocalSource(private val look4SatDao: Look4SatDao) : ILocalSource {
     override suspend fun deleteEntries() = look4SatDao.deleteEntries()
 
     override suspend fun getIdsWithModes(modes: List<String>) = look4SatDao.getIdsWithModes(modes)
+
+    override suspend fun getIdsWithBands(bands: List<String>): List<Int> {
+        if (bands.isEmpty()) return emptyList()
+        val bandSet = bands.toHashSet()
+        return look4SatDao.getRadiosForBandFilter()
+            .mapNotNull { entry ->
+                val catnum = entry.catnum ?: return@mapNotNull null
+                val config = transponderBandConfig(entry.downlinkLow, entry.uplinkLow) ?: return@mapNotNull null
+                if (config in bandSet) catnum else null
+            }
+            .distinct()
+    }
 
     private fun FrameworkEntry.toDomain() = OrbitalData(
         this.name, this.epoch, this.meanmo, this.eccn, this.incl,

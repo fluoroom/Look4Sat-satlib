@@ -82,7 +82,7 @@ class MainContainer(private val context: Context) : IMainContainer {
 
     override fun provideShowToast(): IShowToast = ShowToast(context)
 
-    override fun provideAudioCapture(): IAudioCapture = AudioCapture()
+    override fun provideAudioCapture(): IAudioCapture = AudioCapture(context)
 
     override fun provideSaveImage(): ISaveImage = SaveImage(context)
 

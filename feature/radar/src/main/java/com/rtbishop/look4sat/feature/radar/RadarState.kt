@@ -17,6 +17,7 @@
  */
 package com.rtbishop.look4sat.feature.radar
 
+import com.rtbishop.look4sat.core.domain.model.AudioSource
 import com.rtbishop.look4sat.core.domain.model.SatRadio
 import com.rtbishop.look4sat.core.domain.predict.CelestialComputer
 import com.rtbishop.look4sat.core.domain.predict.OrbitalPass
@@ -72,7 +73,10 @@ data class SstvSubState(
     val hasPermission: Boolean = false,
     val selectedMode: String = "Auto",
     val supportedModes: List<String> = emptyList(),
-    val currentFrame: SstvFrame? = null
+    val currentFrame: SstvFrame? = null,
+    val selectedAudioSource: AudioSource = AudioSource.Mic,
+    val audioSourceError: String? = null,
+    val needsMediaProjection: Boolean = false
 )
 
 sealed interface RadarAction {
@@ -93,5 +97,7 @@ sealed interface RadarAction {
     data object SstvSaveImage : RadarAction
     data object SstvReset : RadarAction
     data class SstvSelectMode(val modeName: String) : RadarAction
+    data class SstvSelectAudioSource(val source: AudioSource) : RadarAction
     data class SstvPermissionResult(val granted: Boolean) : RadarAction
+    data class SstvMediaProjectionGranted(val token: Any?) : RadarAction
 }

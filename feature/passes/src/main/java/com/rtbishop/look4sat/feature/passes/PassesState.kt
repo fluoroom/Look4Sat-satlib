@@ -21,7 +21,7 @@ import com.rtbishop.look4sat.core.domain.predict.OrbitalPass
 
 data class PassesState(
     val isPassesDialogShown: Boolean = false,
-    val isRadiosDialogShown: Boolean = false,
+    val isTransponderDialogShown: Boolean = false,
     val isRefreshing: Boolean = true,
     val isUtc: Boolean = false,
     val nextPass: OrbitalPass,
@@ -31,6 +31,7 @@ data class PassesState(
     val elevation: Double = 16.0,
     val showDeepSpace: Boolean = true,
     val modes: List<String> = emptyList(),
+    val bands: List<String> = emptyList(),
     val itemsList: List<OrbitalPass> = emptyList(),
     val groupedPasses: Map<String, List<OrbitalPass>> = emptyMap(),
     val shouldSeeWhatsNew: Boolean = false,
@@ -41,10 +42,10 @@ data class PassesState(
 sealed interface PassesAction {
     data object DismissWhatsNew : PassesAction
     data class FilterPasses(val hoursAhead: Int, val minElevation: Double, val showDeepSpace: Boolean) : PassesAction
-    data class FilterRadios(val modes: List<String>) : PassesAction
+    data class FilterTransponders(val modes: List<String>, val bands: List<String>) : PassesAction
     data object RefreshPasses : PassesAction
     data object TogglePassesDialog : PassesAction
-    data object ToggleRadiosDialog : PassesAction
+    data object ToggleTransponderDialog : PassesAction
     data class FocusCatNum(val catNum: Int) : PassesAction
     data object ClearFocus : PassesAction
 }

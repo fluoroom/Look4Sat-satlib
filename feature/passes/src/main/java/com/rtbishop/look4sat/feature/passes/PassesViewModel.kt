@@ -56,6 +56,7 @@ class PassesViewModel(
             elevation = settingsRepo.passesSettings.value.minElevation,
             showDeepSpace = settingsRepo.passesSettings.value.showDeepSpace,
             modes = settingsRepo.passesSettings.value.selectedModes,
+            bands = settingsRepo.passesSettings.value.selectedBands,
             shouldSeeWhatsNew = settingsRepo.otherSettings.value.shouldSeeWhatsNew
         )
     )
@@ -107,14 +108,14 @@ class PassesViewModel(
         when (action) {
             PassesAction.DismissWhatsNew -> settingsRepo.setWhatsNewDismissed()
             is PassesAction.FilterPasses ->
-                applyFilter(action.hoursAhead, action.minElevation, action.showDeepSpace, _uiState.value.modes)
-            is PassesAction.FilterRadios ->
-                applyFilter(_uiState.value.hours, _uiState.value.elevation, _uiState.value.showDeepSpace, action.modes)
+                applyFilter(action.hoursAhead, action.minElevation, action.showDeepSpace, _uiState.value.modes, _uiState.value.bands)
+            is PassesAction.FilterTransponders ->
+                applyFilter(_uiState.value.hours, _uiState.value.elevation, _uiState.value.showDeepSpace, action.modes, action.bands)
             PassesAction.RefreshPasses -> refreshPasses()
             PassesAction.TogglePassesDialog ->
                 _uiState.update { it.copy(isPassesDialogShown = !it.isPassesDialogShown) }
-            PassesAction.ToggleRadiosDialog ->
-                _uiState.update { it.copy(isRadiosDialogShown = !it.isRadiosDialogShown) }
+            PassesAction.ToggleTransponderDialog ->
+                _uiState.update { it.copy(isTransponderDialogShown = !it.isTransponderDialogShown) }
             is PassesAction.FocusCatNum -> _uiState.update { it.copy(focusedCatNum = action.catNum) }
             PassesAction.ClearFocus -> _uiState.update { it.copy(focusedCatNum = null) }
         }
@@ -199,18 +200,19 @@ class PassesViewModel(
         hoursAhead: Int,
         minElevation: Double,
         showDeepSpace: Boolean,
-        modes: List<String>
+        modes: List<String>,
+        bands: List<String>
     ) = viewModelScope.launch {
-        settingsRepo.setPassesSettings(PassesSettings(showDeepSpace, hoursAhead, minElevation, modes))
+        settingsRepo.setPassesSettings(PassesSettings(showDeepSpace, hoursAhead, minElevation, modes, bands))
         _uiState.update {
-            it.copy(hours = hoursAhead, elevation = minElevation, showDeepSpace = showDeepSpace, modes = modes)
+            it.copy(hours = hoursAhead, elevation = minElevation, showDeepSpace = showDeepSpace, modes = modes, bands = bands)
         }
-        satelliteRepo.calculatePasses(System.currentTimeMillis(), hoursAhead, minElevation, modes)
+        satelliteRepo.calculatePasses(System.currentTimeMillis(), hoursAhead, minElevation, modes, bands)
     }
 
     private fun refreshPasses() = viewModelScope.launch {
-        val (_, hoursAhead, minElevation, modes) = settingsRepo.passesSettings.value
-        satelliteRepo.calculatePasses(System.currentTimeMillis(), hoursAhead, minElevation, modes)
+        val settings = settingsRepo.passesSettings.value
+        satelliteRepo.calculatePasses(System.currentTimeMillis(), settings.hoursAhead, settings.minElevation, settings.selectedModes, settings.selectedBands)
     }
 
     companion object {

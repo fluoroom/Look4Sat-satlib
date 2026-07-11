@@ -64,8 +64,8 @@ class SatelliteRepo(
     override suspend fun initRepository() = withContext(dispatcher) {
         settingsRepo.selectedIds.collect { selectedIds ->
             _satellites.update { localStorage.getEntriesWithIds(selectedIds) }
-            val (_, hoursAhead, minElevation, modes) = settingsRepo.passesSettings.value
-            calculatePasses(System.currentTimeMillis(), hoursAhead, minElevation, modes)
+            val settings = settingsRepo.passesSettings.value
+            calculatePasses(System.currentTimeMillis(), settings.hoursAhead, settings.minElevation, settings.selectedModes, settings.selectedBands)
         }
     }
 
@@ -105,19 +105,23 @@ class SatelliteRepo(
         }
     }
 
-    override suspend fun calculatePasses(time: Long, hoursAhead: Int, minElevation: Double, modes: List<String>) {
+    override suspend fun calculatePasses(time: Long, hoursAhead: Int, minElevation: Double, modes: List<String>, bands: List<String>) {
         _isCalculating.value = true
         // Normalize to the start of the current minute so that coarse 60-second stepping
         // in getLeoPass always begins from the same phase, producing stable AOS/LOS times
         val normalizedTime = time / 60_000L * 60_000L
         val currentSatellites = _satellites.value
         withContext(dispatcher) {
-            val idsWithModes = localStorage.getIdsWithModes(modes)
+            val modeSet = if (modes.isEmpty()) null else localStorage.getIdsWithModes(modes).toHashSet()
+            val bandSet = if (bands.isEmpty()) null else localStorage.getIdsWithBands(bands).toHashSet()
             val stationPos = settingsRepo.stationPosition.value
-            val filteredSatellites = if (idsWithModes.isEmpty()) {
+            val filteredSatellites = if (modeSet == null && bandSet == null) {
                 currentSatellites
             } else {
-                currentSatellites.filter { it.data.catnum in idsWithModes }
+                currentSatellites.filter { sat ->
+                    (modeSet == null || sat.data.catnum in modeSet) &&
+                    (bandSet == null || sat.data.catnum in bandSet)
+                }
             }
             // Compute passes for each satellite in parallel
             val passLists = coroutineScope {

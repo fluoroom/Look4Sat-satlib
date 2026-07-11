@@ -23,12 +23,14 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxHeight
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.itemsIndexed
 import androidx.compose.material3.Checkbox
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Slider
@@ -51,6 +53,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.rtbishop.look4sat.core.domain.utility.allBandConfigs
 import com.rtbishop.look4sat.core.presentation.LocalSpacing
 import com.rtbishop.look4sat.core.presentation.MainTheme
 import com.rtbishop.look4sat.core.presentation.R
@@ -157,54 +160,109 @@ private fun SliderRow(
 
 @Preview(showBackground = true)
 @Composable
-private fun RadiosDialogPreview() {
-    MainTheme { RadiosDialog(emptyList(), {}) { _ -> } }
+private fun TransponderDialogPreview() {
+    MainTheme { TransponderDialog(emptyList(), emptyList(), {}) { _, _ -> } }
 }
 
 @Composable
-internal fun RadiosDialog(modes: List<String>, cancel: () -> Unit, accept: (List<String>) -> Unit) {
-    val selected = remember { mutableStateOf(modes.toSet()) }
-    val toggle = { mode: String ->
-        selected.value = if (mode in selected.value) selected.value - mode else selected.value + mode
+internal fun TransponderDialog(
+    modes: List<String>,
+    bands: List<String>,
+    cancel: () -> Unit,
+    accept: (List<String>, List<String>) -> Unit
+) {
+    val selectedModes = remember { mutableStateOf(modes.toSet()) }
+    val selectedBands = remember { mutableStateOf(bands.toSet()) }
+    val toggleMode = { mode: String ->
+        selectedModes.value = if (mode in selectedModes.value) selectedModes.value - mode else selectedModes.value + mode
     }
-    val onAccept = { accept(selected.value.toList()).also { cancel() } }
-    SharedDialog(title = stringResource(R.string.pass_modes_title), onCancel = cancel, onAccept = onAccept) {
+    val toggleBand = { band: String ->
+        selectedBands.value = if (band in selectedBands.value) selectedBands.value - band else selectedBands.value + band
+    }
+    val onAccept = { accept(selectedModes.value.toList(), selectedBands.value.toList()).also { cancel() } }
+    SharedDialog(title = stringResource(R.string.pass_transponder_title), onCancel = cancel, onAccept = onAccept) {
+        // Modes section
+        SectionHeader("Modulation mode")
         LazyVerticalGrid(
             columns = GridCells.Adaptive(240.dp),
             modifier = Modifier
-                .fillMaxHeight(0.69f)
+                .fillMaxHeight(0.38f)
                 .background(MaterialTheme.colorScheme.background),
             horizontalArrangement = Arrangement.spacedBy(1.dp),
             verticalArrangement = Arrangement.spacedBy(1.dp)
         ) {
             itemsIndexed(allModes) { index, item ->
-                Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                    modifier = Modifier
-                        .background(MaterialTheme.colorScheme.surface)
-                        .clickable { toggle(item) }
-                ) {
-                    Text(
-                        text = "${index + 1}).",
-                        modifier = Modifier.padding(start = 16.dp, end = 8.dp),
-                        fontWeight = FontWeight.Normal,
-                        color = MaterialTheme.colorScheme.primary
-                    )
-                    Text(
-                        text = item,
-                        modifier = Modifier.weight(1f),
-                        fontWeight = FontWeight.Medium,
-                        maxLines = 1,
-                        overflow = TextOverflow.Ellipsis
-                    )
-                    Checkbox(
-                        checked = item in selected.value,
-                        onCheckedChange = null,
-                        modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)
-                    )
-                }
+                FilterRow(
+                    label = "${index + 1}).",
+                    text = item,
+                    checked = item in selectedModes.value,
+                    onClick = { toggleMode(item) }
+                )
             }
         }
+        HorizontalDivider(thickness = 2.dp, color = MaterialTheme.colorScheme.background)
+        // Bands section
+        SectionHeader("Band configuration")
+        LazyVerticalGrid(
+            columns = GridCells.Adaptive(120.dp),
+            modifier = Modifier
+                .fillMaxHeight(0.62f)
+                .background(MaterialTheme.colorScheme.background),
+            horizontalArrangement = Arrangement.spacedBy(1.dp),
+            verticalArrangement = Arrangement.spacedBy(1.dp)
+        ) {
+            itemsIndexed(allBandConfigs) { index, item ->
+                FilterRow(
+                    label = "${index + 1}).",
+                    text = item,
+                    checked = item in selectedBands.value,
+                    onClick = { toggleBand(item) }
+                )
+            }
+        }
+    }
+}
+
+@Composable
+private fun SectionHeader(title: String) {
+    Text(
+        text = title,
+        fontSize = 13.sp,
+        fontWeight = FontWeight.Medium,
+        color = MaterialTheme.colorScheme.primary,
+        modifier = Modifier
+            .fillMaxWidth()
+            .background(MaterialTheme.colorScheme.background)
+            .padding(horizontal = 16.dp, vertical = 6.dp)
+    )
+}
+
+@Composable
+private fun FilterRow(label: String, text: String, checked: Boolean, onClick: () -> Unit) {
+    Row(
+        verticalAlignment = Alignment.CenterVertically,
+        modifier = Modifier
+            .background(MaterialTheme.colorScheme.surface)
+            .clickable { onClick() }
+    ) {
+        Text(
+            text = label,
+            modifier = Modifier.padding(start = 16.dp, end = 8.dp),
+            fontWeight = FontWeight.Normal,
+            color = MaterialTheme.colorScheme.primary
+        )
+        Text(
+            text = text,
+            modifier = Modifier.weight(1f),
+            fontWeight = FontWeight.Medium,
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis
+        )
+        Checkbox(
+            checked = checked,
+            onCheckedChange = null,
+            modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)
+        )
     }
 }
 

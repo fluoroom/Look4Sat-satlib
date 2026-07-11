@@ -17,18 +17,20 @@
  */
 package com.rtbishop.look4sat.core.domain.usecase
 
+import com.rtbishop.look4sat.core.domain.model.AudioSource
 import kotlinx.coroutines.flow.Flow
 
-/**
- * Platform abstraction for microphone audio capture.
- * Produces a flow of mono Float PCM buffers at the configured sample rate.
- */
 interface IAudioCapture {
     val sampleRate: Int
 
-    /**
-     * Start capturing audio. Emits FloatArray buffers continuously until the flow is canceled.
-     * Caller is responsible for holding RECORD_AUDIO permission before calling this.
-     */
-    fun audioFlow(): Flow<FloatArray>
+    /** Emits FloatArray buffers continuously until the flow is canceled.
+     *  [captureToken] is an opaque Android MediaProjection required for [AudioSource.Internal]. */
+    fun audioFlow(source: AudioSource = AudioSource.Mic, captureToken: Any? = null): Flow<FloatArray>
+
+    /** Called before the screen-capture consent dialog for [AudioSource.Internal].
+     *  Android 14+ requires the foreground service to be running before createScreenCaptureIntent(). */
+    fun prepareInternalCapture() {}
+
+    /** Called when the user denies the consent dialog (so the foreground service doesn't leak). */
+    fun cancelInternalCapture() {}
 }

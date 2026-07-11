@@ -108,12 +108,13 @@ private fun PassesScreen(
             onAction(PassesAction.FilterPasses(hours, elevation, showDeepSpace))
         }
     }
-    if (uiState.isRadiosDialogShown) {
-        RadiosDialog(
+    if (uiState.isTransponderDialogShown) {
+        TransponderDialog(
             modes = uiState.modes,
-            cancel = { onAction(PassesAction.ToggleRadiosDialog) }
-        ) { modes ->
-            onAction(PassesAction.FilterRadios(modes))
+            bands = uiState.bands,
+            cancel = { onAction(PassesAction.ToggleTransponderDialog) }
+        ) { modes, bands ->
+            onAction(PassesAction.FilterTransponders(modes, bands))
         }
     }
     if (uiState.shouldSeeWhatsNew) {
@@ -138,7 +139,7 @@ private fun PassesScreen(
                     NextPassRow(pass = uiState.nextPass, isUtc = uiState.isUtc)
                 },
                 endAction = {
-                    IconCard(action = { onAction(PassesAction.ToggleRadiosDialog) }, resId = R.drawable.ic_radios)
+                    IconCard(action = { onAction(PassesAction.ToggleTransponderDialog) }, resId = R.drawable.ic_radios)
                 }
             )
         }

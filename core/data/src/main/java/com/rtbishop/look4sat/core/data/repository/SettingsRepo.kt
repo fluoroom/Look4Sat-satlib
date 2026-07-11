@@ -23,6 +23,7 @@ import android.location.LocationManager
 import androidx.core.content.edit
 import androidx.core.location.LocationListenerCompat
 import androidx.core.location.LocationManagerCompat
+import com.rtbishop.look4sat.core.domain.model.AudioSource
 import com.rtbishop.look4sat.core.domain.model.DataSourcesSettings
 import com.rtbishop.look4sat.core.domain.model.DatabaseState
 import com.rtbishop.look4sat.core.domain.model.OtherSettings
@@ -67,6 +68,8 @@ class SettingsRepo(
     private val keySelectedIds = "selectedIds"
     private val keySelectedTypes = "selectedTypes"
     private val keySelectedModes = "selectedModes"
+    private val keySelectedBands = "selectedBands"
+    private val keyAudioSource = "audioSource"
     private val keyStateOfAutoUpdate = "stateOfAutoUpdate"
     private val keyStateOfSensors = "stateOfSensors"
     private val keyStateOfSweep = "stateOfSweep"
@@ -128,6 +131,7 @@ class SettingsRepo(
         putInt(keyFilterHoursAhead, settings.hoursAhead)
         putLong(keyFilterMinElevation, settings.minElevation.toRawBits())
         putString(keySelectedModes, settings.selectedModes.joinToString(separatorComma))
+        putString(keySelectedBands, settings.selectedBands.joinToString(separatorComma))
         _passesSettings.value = settings
     }
 
@@ -137,7 +141,9 @@ class SettingsRepo(
         val minElevation = Double.fromBits(preferences.getLong(keyFilterMinElevation, 16.0.toRawBits()))
         val selectedModesString = preferences.getString(keySelectedModes, null)
         val selectedModes = selectedModesString?.split(separatorComma)?.sorted() ?: emptyList()
-        return PassesSettings(showDeepSpace, hoursAhead, minElevation, selectedModes)
+        val selectedBandsString = preferences.getString(keySelectedBands, null)
+        val selectedBands = selectedBandsString?.split(separatorComma)?.filter { it.isNotBlank() } ?: emptyList()
+        return PassesSettings(showDeepSpace, hoursAhead, minElevation, selectedModes, selectedBands)
     }
     //endregion
 
@@ -335,6 +341,7 @@ class SettingsRepo(
                 putBoolean(keyShouldSeeWarning, new.shouldSeeWarning)
                 putBoolean(keyShouldSeeWhatsNew, new.shouldSeeWhatsNew)
                 putString(keySstvMode, new.sstvMode)
+                putString(keyAudioSource, new.audioSource.name)
             }
             new
         }
@@ -349,7 +356,8 @@ class SettingsRepo(
         stateOfNightMode = preferences.getBoolean(keyStateOfNightMode, false),
         shouldSeeWarning = preferences.getBoolean(keyShouldSeeWarning, true),
         shouldSeeWhatsNew = preferences.getBoolean(keyShouldSeeWhatsNew, true),
-        sstvMode = preferences.getString(keySstvMode, null) ?: "Auto"
+        sstvMode = preferences.getString(keySstvMode, null) ?: "Auto",
+        audioSource = AudioSource.entries.find { it.name == preferences.getString(keyAudioSource, null) } ?: AudioSource.Mic
     )
     //endregion
 

@@ -18,7 +18,9 @@
 package com.rtbishop.look4sat.feature.radar
 
 import android.Manifest
+import android.app.Activity
 import android.content.pm.PackageManager
+import android.media.projection.MediaProjectionManager
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.animation.core.LinearEasing
@@ -93,6 +95,26 @@ fun RadarDestination(navigateUp: () -> Unit) {
     val permissionLauncher = rememberLauncherForActivityResult(
         ActivityResultContracts.RequestPermission()
     ) { granted -> viewModel.onAction(RadarAction.SstvPermissionResult(granted)) }
+
+    val mediaProjectionManager = context.getSystemService(MediaProjectionManager::class.java)
+    val mediaProjectionLauncher = rememberLauncherForActivityResult(
+        ActivityResultContracts.StartActivityForResult()
+    ) { result ->
+        val token = runCatching {
+            if (result.resultCode == Activity.RESULT_OK && result.data != null) {
+                mediaProjectionManager.getMediaProjection(result.resultCode, result.data!!)
+            } else null
+        }.getOrNull()
+        viewModel.onAction(RadarAction.SstvMediaProjectionGranted(token))
+    }
+    // prepareInternalCapture() (which starts the foreground service on API 34+) is called
+    // in the ViewModel via IAudioCapture before needsMediaProjection flips to true.
+    LaunchedEffect(uiState.sstv.needsMediaProjection) {
+        if (uiState.sstv.needsMediaProjection) {
+            mediaProjectionLauncher.launch(mediaProjectionManager.createScreenCaptureIntent())
+        }
+    }
+
     RadarScreen(uiState, viewModel::onAction, navigateUp, requestMicPermission = {
         permissionLauncher.launch(Manifest.permission.RECORD_AUDIO)
     })

@@ -39,11 +39,23 @@ It is now and always will be completely ad-free and open-source.
 
 ## This fork
 
-This fork adds **satlib** — a universal local-network API that exposes complete, real-time satellite pass data so any external application can consume it over HTTP, without device-specific integrations inside the tracker.
+This fork adds **satlib** and several quality-of-life improvements on top of upstream Look4Sat.
+
+### Transponder filters applied to the radar screen
+
+The mode and band filters set in the passes screen (e.g. FM, V/U) are now also applied to the transponder list shown on the radar screen. Only transceivers that match the active filter are displayed, keeping the list focused on what you actually care about.
+
+### SSTV audio input selection
+
+The SSTV decoder lets you choose the audio input source: **Microphone** (default) or **Unprocessed** (raw ADC, bypasses noise suppression). Select from the button in the SSTV control bar before starting a recording.
 
 ### [satlib](https://github.com/fluoroom/satlib)
 
-While a pass is active on the radar screen, any device on the same network can poll:
+satlib is a universal local-network API that exposes complete, real-time satellite pass data so any external application can consume it over HTTP, without device-specific integrations inside the tracker.
+
+satlib data is published only while the **Track** toggle is active on the radar screen. Selecting a transponder alone does not trigger updates — tracking must be explicitly enabled.
+
+While tracking is active, any device on the same network can poll:
 
 ```
 GET http://<phone-ip>:4534/

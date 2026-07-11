@@ -54,6 +54,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
+import com.rtbishop.look4sat.core.domain.model.AudioSource
 import com.rtbishop.look4sat.core.presentation.IconCard
 import com.rtbishop.look4sat.core.presentation.OutlinedText
 import com.rtbishop.look4sat.core.presentation.R
@@ -91,6 +92,7 @@ internal fun SstvPage(
 
     // Mode selection dialog
     val showModeDialog = remember { mutableStateOf(false) }
+    val showSourceDialog = remember { mutableStateOf(false) }
 
     if (showModeDialog.value) {
         val allModes = remember(sstv.supportedModes) { listOf("Auto") + sstv.supportedModes }
@@ -147,6 +149,58 @@ internal fun SstvPage(
         }
     }
 
+    if (showSourceDialog.value) {
+        Dialog(onDismissRequest = { showSourceDialog.value = false }) {
+            ElevatedCard {
+                Column(
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    modifier = Modifier.padding(vertical = 16.dp)
+                ) {
+                    Text(
+                        text = "Audio Source",
+                        fontSize = 16.sp,
+                        fontWeight = FontWeight.Medium,
+                        color = MaterialTheme.colorScheme.primary,
+                        modifier = Modifier.padding(bottom = 12.dp)
+                    )
+                    LazyColumn(
+                        modifier = Modifier.background(MaterialTheme.colorScheme.background),
+                        verticalArrangement = Arrangement.spacedBy(1.dp)
+                    ) {
+                        items(AudioSource.entries.filter { it != AudioSource.Internal && it != AudioSource.BluetoothSco }) { source ->
+                            Row(
+                                verticalAlignment = Alignment.CenterVertically,
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .background(MaterialTheme.colorScheme.surface)
+                                    .clickable {
+                                        onAction(RadarAction.SstvSelectAudioSource(source))
+                                        showSourceDialog.value = false
+                                    }
+                            ) {
+                                Text(
+                                    text = source.label,
+                                    fontSize = 16.sp,
+                                    fontWeight = FontWeight.Medium,
+                                    maxLines = 1,
+                                    overflow = TextOverflow.Ellipsis,
+                                    modifier = Modifier
+                                        .weight(1f)
+                                        .padding(start = 16.dp)
+                                )
+                                RadioButton(
+                                    selected = source == sstv.selectedAudioSource,
+                                    onClick = null,
+                                    modifier = Modifier.padding(horizontal = 16.dp, vertical = 12.dp)
+                                )
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+
     // Main SSTV view — image fills entire area, controls overlay at bottom
     Box(
         modifier = Modifier
@@ -175,7 +229,11 @@ internal fun SstvPage(
             )
         } else {
             Text(
-                text = if (sstv.status == SstvStatus.Recording) "Listening…" else "No signal",
+                text = when {
+                    sstv.audioSourceError != null -> "Error: ${sstv.audioSourceError}"
+                    sstv.status == SstvStatus.Recording -> "Listening…"
+                    else -> "No signal"
+                },
                 color = MaterialTheme.colorScheme.onSurface,
                 fontSize = 16.sp,
                 modifier = Modifier.align(Alignment.Center)
@@ -214,6 +272,24 @@ internal fun SstvPage(
                     Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                         Text(
                             text = "Mode: ${sstv.selectedMode}",
+                            fontSize = 14.sp,
+                            maxLines = 1,
+                            color = MaterialTheme.colorScheme.onSurface,
+                            modifier = Modifier.infiniteMarquee()
+                        )
+                    }
+                }
+                // Audio source button — opens source picker dialog
+                ElevatedCard(
+                    modifier = Modifier.weight(1f).height(48.dp),
+                    onClick = { showSourceDialog.value = true },
+                    colors = CardDefaults.elevatedCardColors(
+                        containerColor = MaterialTheme.colorScheme.surface
+                    )
+                ) {
+                    Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                        Text(
+                            text = sstv.selectedAudioSource.label,
                             fontSize = 14.sp,
                             maxLines = 1,
                             color = MaterialTheme.colorScheme.onSurface,

@@ -27,7 +27,8 @@ data class PassesSettings(
     val showDeepSpace: Boolean = true,
     val hoursAhead: Int,
     val minElevation: Double,
-    val selectedModes: List<String>
+    val selectedModes: List<String>,
+    val selectedBands: List<String> = emptyList()
 )
 
 data class RCSettings(
@@ -57,7 +58,8 @@ data class OtherSettings(
     val stateOfNightMode: Boolean = false,
     val shouldSeeWarning: Boolean,
     val shouldSeeWhatsNew: Boolean,
-    val sstvMode: String = "Auto"
+    val sstvMode: String = "Auto",
+    val audioSource: AudioSource = AudioSource.Mic
 )
 
 data class DataSourcesSettings(

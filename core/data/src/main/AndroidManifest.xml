@@ -13,5 +13,14 @@
     <uses-permission android:name="android.permission.BLUETOOTH_SCAN" />
     <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.RECORD_AUDIO" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_MEDIA_PROJECTION" />
+
+    <application>
+        <service
+            android:name="com.rtbishop.look4sat.core.data.usecase.MediaProjectionFgService"
+            android:foregroundServiceType="mediaProjection"
+            android:exported="false" />
+    </application>
 
 </manifest>

@@ -21,6 +21,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
+import com.rtbishop.look4sat.core.domain.model.AudioSource
 import com.rtbishop.look4sat.core.domain.model.SatApiData
 import com.rtbishop.look4sat.core.domain.model.SatRadio
 import com.rtbishop.look4sat.core.domain.predict.CelestialComputer
@@ -42,7 +43,9 @@ import com.rtbishop.look4sat.core.domain.usecase.IShowToast
 import com.rtbishop.look4sat.core.domain.utility.round
 import com.rtbishop.look4sat.core.domain.utility.toDegrees
 import com.rtbishop.look4sat.core.domain.utility.toTimerString
+import com.rtbishop.look4sat.core.domain.utility.transponderBandConfig
 import com.rtbishop.look4sat.core.presentation.formatFrequency
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -84,7 +87,10 @@ class RadarViewModel(
             orientationValues = sensorsRepo.sensorData.value,
             shouldShowSweep = settingsRepo.otherSettings.value.stateOfSweep,
             shouldUseCompass = settingsRepo.otherSettings.value.stateOfSensors,
-            sstv = SstvSubState(selectedMode = settingsRepo.otherSettings.value.sstvMode)
+            sstv = SstvSubState(
+            selectedMode = settingsRepo.otherSettings.value.sstvMode,
+            selectedAudioSource = settingsRepo.otherSettings.value.audioSource
+        )
         )
     )
     val uiState: StateFlow<RadarState> = _uiState
@@ -144,7 +150,14 @@ class RadarViewModel(
     // Loads transmitters and satellite track for pass, sets initial state, returns full radio list
     private suspend fun loadPassData(pass: OrbitalPass): List<SatRadio> {
         _uiState.update { it.copy(currentPass = pass) }
-        val allRadios = satelliteRepo.getRadiosWithId(pass.catNum)
+        val settings = settingsRepo.passesSettings.value
+        val modes = settings.selectedModes
+        val bands = settings.selectedBands
+        val allRadios = satelliteRepo.getRadiosWithId(pass.catNum).filter { radio ->
+            val modeOk = modes.isEmpty() || (radio.downlinkMode != null && radio.downlinkMode in modes)
+            val bandOk = bands.isEmpty() || transponderBandConfig(radio.downlinkLow, radio.uplinkLow)?.let { it in bands } == true
+            modeOk && bandOk
+        }
         transponders = allRadios.filter { it.downlinkLow != null }
         if (allRadios.isNotEmpty()) {
             val firstUuid = allRadios.first().uuid
@@ -180,7 +193,7 @@ class RadarViewModel(
         }
         processRadios(allRadios, pass.orbitalObject, timeNow)
         sendPassData(pos)
-        pushSatApiData(pass, pos)
+        if (_uiState.value.radioControl.isTracking) pushSatApiData(pass, pos)
     }
 
     private fun collectRadioTrackingState() {
@@ -255,7 +268,26 @@ class RadarViewModel(
                 _uiState.update { it.copy(sstv = it.sstv.copy(hasPermission = action.granted)) }
                 if (action.granted) initSstvDecoder()
             }
-            RadarAction.SstvStartRecording -> startSstvRecording()
+            RadarAction.SstvStartRecording -> {
+                if (_uiState.value.sstv.selectedAudioSource == AudioSource.Internal) {
+                    // Android 14+ validates that a FOREGROUND_SERVICE_TYPE_MEDIA_PROJECTION service is
+                    // already running when createScreenCaptureIntent() is called — start it first.
+                    audioCapture.prepareInternalCapture()
+                    _uiState.update { it.copy(sstv = it.sstv.copy(needsMediaProjection = true, audioSourceError = null)) }
+                } else {
+                    startSstvRecording()
+                }
+            }
+            is RadarAction.SstvMediaProjectionGranted -> {
+                _uiState.update { it.copy(sstv = it.sstv.copy(needsMediaProjection = false)) }
+                if (action.token != null) {
+                    startSstvRecording(action.token)
+                } else {
+                    // User denied or dismissed — stop the service we started in SstvStartRecording
+                    audioCapture.cancelInternalCapture()
+                    _uiState.update { it.copy(sstv = it.sstv.copy(audioSourceError = "Screen recording permission denied")) }
+                }
+            }
             RadarAction.SstvStopRecording -> stopSstvRecording()
             RadarAction.SstvSaveImage -> {
                 val frame = _uiState.value.sstv.currentFrame ?: return
@@ -271,6 +303,10 @@ class RadarViewModel(
                 sstvDecoder?.lockMode(action.modeName)
                 _uiState.update { it.copy(sstv = it.sstv.copy(selectedMode = action.modeName)) }
                 settingsRepo.updateOtherSettings { it.copy(sstvMode = action.modeName) }
+            }
+            is RadarAction.SstvSelectAudioSource -> {
+                _uiState.update { it.copy(sstv = it.sstv.copy(selectedAudioSource = action.source, audioSourceError = null)) }
+                settingsRepo.updateOtherSettings { it.copy(audioSource = action.source) }
             }
             RadarAction.SstvReset -> {
                 sstvDecoder?.clearPixels()
@@ -390,13 +426,25 @@ class RadarViewModel(
         }
     }
 
-    private fun startSstvRecording() {
+    private fun startSstvRecording(captureToken: Any? = null) {
         if (sstvRecordingJob?.isActive == true) return
         initSstvDecoder()
-        _uiState.update { it.copy(sstv = it.sstv.copy(status = SstvStatus.Recording)) }
+        val source = _uiState.value.sstv.selectedAudioSource
+        _uiState.update { it.copy(sstv = it.sstv.copy(status = SstvStatus.Recording, audioSourceError = null)) }
         sstvRecordingJob = viewModelScope.launch {
-            audioCapture.audioFlow().collect { buffer ->
-                sstvDecoder?.feedSamples(buffer)
+            try {
+                // Give MediaProjectionFgService.onStartCommand time to call startForeground()
+                // before AudioRecord.startRecording() — the service runs on the main thread.
+                if (source == AudioSource.Internal) delay(200)
+                audioCapture.audioFlow(source, captureToken).collect { buffer ->
+                    sstvDecoder?.feedSamples(buffer)
+                }
+            } catch (e: CancellationException) {
+                throw e
+            } catch (e: SecurityException) {
+                _uiState.update { it.copy(sstv = it.sstv.copy(status = SstvStatus.Idle, audioSourceError = "Permission denied for ${source.label}")) }
+            } catch (e: IllegalStateException) {
+                _uiState.update { it.copy(sstv = it.sstv.copy(status = SstvStatus.Idle, audioSourceError = e.message)) }
             }
         }
     }
@@ -404,7 +452,7 @@ class RadarViewModel(
     private fun stopSstvRecording() {
         sstvRecordingJob?.cancel()
         sstvRecordingJob = null
-        _uiState.update { it.copy(sstv = it.sstv.copy(status = SstvStatus.Idle)) }
+        _uiState.update { it.copy(sstv = it.sstv.copy(status = SstvStatus.Idle, needsMediaProjection = false)) }
     }
 
     companion object {
